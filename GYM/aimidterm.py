@@ -8,7 +8,6 @@ import time
 
 
 # 不限程式語言實作人工生命(Artificial life)，主題與方法不限。
-# 以下以健身房的生活方式：
 # 空間大小: 100*100 平方
 # 初始人比例於空間中: 正常男生0.2，正常女生0.2，泡芙男/女孩0.05, 教練0.05，空位0.5
 # 設定空間中角色位置: 隨機
@@ -21,7 +20,8 @@ import time
 # 設定Time interval
 # time.sleep(1)
 
-# Initial
+# Initial以下以健身房的生活方式：
+#
 
 # this function is for changing the exist dots
 
@@ -45,7 +45,7 @@ class Person:
 
     def colorUpdate(self):
         if self.figure == 0:
-            self.color = self.white
+            self.color = self.black
         elif self.figure == 1:
             self.color = self.blue
         elif self.figure == 2:
@@ -55,7 +55,7 @@ class Person:
         elif self.figure == 4:
             self.color = self.pink
         elif self.figure == 5:
-            self.color = self.purple
+            self.color = self.white
 
 
 class Gym:
@@ -70,14 +70,14 @@ class Gym:
         self.white = (255, 255, 255)  # grid background
         self.black = (0, 0, 0)  # personal trainer
         '''initialize gym layout'''
-        self.manRatio = 0.1
-        self.womanRatio = 0.1
-        self.fatManRatio = 0.025
-        self.fatWomanRatio = 0.025
-        self.trainerRatio = 0.05
-        self.gymSpaceRatio = 0.7
+        self.manRatio = 0.05
+        self.womanRatio = 0.05
+        self.fatManRatio = 0.1
+        self.fatWomanRatio = 0.1
+        self.trainerRatio = 0.1
+        self.gymSpaceRatio = 0.6
         self.screen = pygame.display.set_mode((windowHeight, windowWidth))
-        self.screen.fill(self.white)
+        # self.screen.fill(self.white)
         self.generateInitRandom()
 
     def move(self):  # mve obj to random empty space
@@ -93,8 +93,6 @@ class Gym:
                         self.layout[nextStep[0], nextStep[1]] = self.layout[i][j]
                         # print("after: ", self.layout[nextStep[0], nextStep[1]].figure)
                         self.layout[i, j].figure = 0
-
-        exit()
 
     def checkNextStep(self, i, j):
         if i - 1 >= 0 and self.layout[i - 1, j].figure == 0:
@@ -125,39 +123,40 @@ class Gym:
                 pygame.draw.rect(self.screen, self.layout[i, j].color, rect)
 
     def updateObjCondition(self):
+        tmp = self.layout
         for i in range(self.gridHeight):
             for j in range(self.gridWidth):
                 if self.layout[i, j].figure == 0:  # empty
                     continue
                 elif self.layout[i, j].figure == 1:  # man
-                    pass
                     targetObjCoor = self.checkSurrounding(i, j, (2, -1))
                     if targetObjCoor != 0:
-                        self.layout[targetObjCoor[0], targetObjCoor[1]].figure = 5
+                        tmp[targetObjCoor[0], targetObjCoor[1]].figure = 0
                     # Person(0) problem: location to find empty space put new create obj
                 elif self.layout[i, j].figure == 2:  # woman
-                    pass
+
                     targetObjCoor = self.checkSurrounding(i, j, (1, -1))
                     if targetObjCoor != 0:
-                        self.layout[targetObjCoor[0], targetObjCoor[1]].figure = 4
+                        tmp[targetObjCoor[0], targetObjCoor[1]].figure = 0
                     # problem: location to find empty space put new create obj
                 elif self.layout[i, j].figure == 3:  # coach
                     targetObjCoor = self.checkSurrounding(i, j, (4, 5))
                     if targetObjCoor != 0:
                         if self.layout[targetObjCoor[0], targetObjCoor[1]].figure == 4:
-                            self.layout[targetObjCoor[0], targetObjCoor[1]].figure = 2
+                            tmp[targetObjCoor[0], targetObjCoor[1]].figure = 2
                         else:
-                            self.layout[targetObjCoor[0], targetObjCoor[1]].figure = 1
+                            tmp[targetObjCoor[0], targetObjCoor[1]].figure = 1
                 elif self.layout[i, j].figure == 4:  # fat girl
                     targetObjCoor = self.checkSurrounding(i, j, (3, -1))
                     if targetObjCoor != 0:
-                        self.layout[i, j].figure = 2
+                        tmp[i, j].figure = 2
 
                 elif self.layout[i, j].figure == 5:  # fat boy
                     targetObjCoor = self.checkSurrounding(i, j, (3, -1))
                     if targetObjCoor != 0:
-                        self.layout[i, j].figure = 1
-                self.layout[i, j].colorUpdate()
+                        tmp[i, j].figure = 1
+                tmp[i, j].colorUpdate()
+        self.layout = tmp
 
     def generateInitRandom(self):
         self.gridHeight = int(self.windowHeight / self.blockSize)
@@ -170,11 +169,12 @@ class Gym:
                                            p=[self.gymSpaceRatio, self.manRatio, self.womanRatio, self.trainerRatio,
                                               self.fatWomanRatio, self.fatManRatio])
         self.objLocList = self.objLocList.reshape((self.gridHeight, self.gridWidth))
-        self.layout = np.empty([100, 100], dtype=object)
+        self.layout = np.empty([self.gridHeight, self.gridWidth], dtype=object)
 
         for i in range(self.gridHeight):
             for j in range(self.gridWidth):
                 self.layout[i, j] = Person(i, j, self.objLocList[i, j])
+        # self.layout[i, j].colorUpdate()
 
     def debug(self):
         arr = np.zeros((self.gridHeight, self.gridWidth), int)
@@ -186,9 +186,9 @@ class Gym:
 
 
 def main():
-    windowHeight = 400
-    windowWidth = 400
-    blockSize = 20
+    windowHeight = 600
+    windowWidth = 600
+    blockSize = 10
 
     global clock
     pygame.init()
@@ -212,7 +212,7 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
-        # gym.debug()
+        gym.debug()
         pygame.display.update()
         time.sleep(1)
 
